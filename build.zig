@@ -102,7 +102,10 @@ fn buildKeygenExe(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std
     return exe;
 }
 
-pub fn generateKeypairRunStep(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, path: []const u8) !*std.Build.Step.Run {
+pub fn generateKeypairRunStep(b: *std.Build, path: []const u8) *std.Build.Step.Run {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
     const exe = buildKeygenExe(b, target, optimize);
     const run_exe = b.addRunArtifact(exe);
     run_exe.addArg("-o");
