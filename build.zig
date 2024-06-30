@@ -15,6 +15,9 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
+    // Export self as a module
+    _ = b.addModule("base58", .{ .root_source_file = b.path("src/root.zig") });
+
     const lib = b.addStaticLibrary(.{
         .name = "base58",
         // In this case the main source file is merely a path, however, in more
