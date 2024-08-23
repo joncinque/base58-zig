@@ -95,6 +95,6 @@ pub fn generateKeypairRunStep(b: *std.Build, path: []const u8) *std.Build.Step.R
     const exe = base58_dep.artifact("base58-keygen-host");
     const run_exe = b.addRunArtifact(exe);
     run_exe.addArg("-o");
-    run_exe.addFileArg(.{ .path = path });
+    run_exe.addArg(path);
     return run_exe;
 }
