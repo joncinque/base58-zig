@@ -98,3 +98,11 @@ pub fn generateKeypairRunStep(b: *std.Build, path: []const u8) *std.Build.Step.R
     run_exe.addArg(path);
     return run_exe;
 }
+
+pub fn generateProgramKeypair(b: *std.Build, program: *std.Build.Step.Compile) void {
+    const program_name = program.out_filename[0 .. program.out_filename.len - std.fs.path.extension(program.out_filename).len];
+    const path = b.fmt("{s}-keypair.json", .{program_name});
+    const lib_path = b.getInstallPath(.lib, path);
+    const run_step = generateKeypairRunStep(b, lib_path);
+    b.getInstallStep().dependOn(&run_step.step);
+}
