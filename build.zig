@@ -104,5 +104,6 @@ pub fn generateProgramKeypair(b: *std.Build, program: *std.Build.Step.Compile) v
     const path = b.fmt("{s}-keypair.json", .{program_name});
     const lib_path = b.getInstallPath(.lib, path);
     const run_step = generateKeypairRunStep(b, lib_path);
+    run_step.step.dependOn(&program.step);
     b.getInstallStep().dependOn(&run_step.step);
 }
