@@ -58,7 +58,7 @@ pub fn generateKeypair(path: []const u8, allocator: std.mem.Allocator) !void {
             return err;
         }
 
-        const keypair = try std.crypto.sign.Ed25519.KeyPair.create(null);
+        const keypair = std.crypto.sign.Ed25519.KeyPair.generate();
         var keypair_json = std.ArrayList(u8).init(allocator);
         defer keypair_json.deinit();
         try std.json.stringify(keypair.secret_key.bytes, .{}, keypair_json.writer());
