@@ -17,6 +17,8 @@ pub fn main() !void {
         \\
     );
 
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_writer = std.fs.File.stderr().writer(&stderr_buffer).interface;
     // Initialize our diagnostics, which can be used for reporting useful errors.
     // This is optional. You can also pass `.{}` to `clap.parse` if you don't
     // care about the extra information `Diagnostics` provides.
@@ -26,13 +28,13 @@ pub fn main() !void {
         .allocator = gpa.allocator(),
     }) catch |err| {
         // Report useful error and exit
-        diag.report(io.getStdErr().writer(), err) catch {};
+        diag.report(&stderr_writer, err) catch {};
         return err;
     };
     defer res.deinit();
 
     if (res.args.help != 0)
-        return clap.usage(std.io.getStdErr().writer(), clap.Help, &params);
+        return clap.usage(&stderr_writer, clap.Help, &params);
     if (res.args.outfile) |s| {
         try generateKeypair(s, gpa.allocator());
     }
@@ -41,7 +43,7 @@ pub fn main() !void {
 pub fn generateKeypair(path: []const u8, allocator: std.mem.Allocator) !void {
     const cwd = std.fs.cwd();
     if (cwd.openFile(path, .{})) |keypair_file| {
-        const keypair_json = try keypair_file.readToEndAlloc(allocator, 1 * 1024 * 1024);
+        const keypair_json = try keypair_file.readToEndAlloc(allocator, 1024);
         defer allocator.free(keypair_json);
         const parsed_keypair = try std.json.parseFromSlice([std.crypto.sign.Ed25519.SecretKey.encoded_length]u8, allocator, keypair_json, .{});
         defer parsed_keypair.deinit();
@@ -59,11 +61,12 @@ pub fn generateKeypair(path: []const u8, allocator: std.mem.Allocator) !void {
         }
 
         const keypair = std.crypto.sign.Ed25519.KeyPair.generate();
-        var keypair_json = std.ArrayList(u8).init(allocator);
-        defer keypair_json.deinit();
-        try std.json.stringify(keypair.secret_key.bytes, .{}, keypair_json.writer());
+        var keypair_writer = std.Io.Writer.Allocating.init(allocator);
+        defer keypair_writer.deinit();
+        const json_fmt = std.json.fmt(keypair.secret_key.bytes, .{});
+        try json_fmt.format(&keypair_writer.writer);
         var file = try createFileWithRetries(path);
-        try file.writeAll(keypair_json.items);
+        try file.writeAll(keypair_writer.written());
 
         var pubkey_buffer: [bitcoin.getEncodedLengthUpperBound(std.crypto.sign.Ed25519.PublicKey.encoded_length)]u8 = undefined;
         const pubkey = bitcoin.encode(&pubkey_buffer, &keypair.public_key.bytes);
