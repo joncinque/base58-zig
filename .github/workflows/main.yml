@@ -8,6 +8,9 @@ on:
     branches:
       - 'main'
 
+env:
+  ZIG_VERSION: 0.16.0
+
 jobs:
   test_library:
     strategy:
@@ -18,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.15.2
+          version: ${{ env.ZIG_VERSION }}
       - run: zig build test --summary all
   lint:
     runs-on: ubuntu-latest
@@ -26,7 +29,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.15.2
+          version: ${{ env.ZIG_VERSION }}
       - run: zig fmt --check .
   test_build:
     strategy:
@@ -37,5 +40,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.15.2
+          version: ${{ env.ZIG_VERSION }}
       - run: cd test-build && zig build --summary all
